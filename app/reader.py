@@ -11,7 +11,7 @@ class Reader:
         self._stream = self._container.streams.video[0]
         self._creation_time = self._get_creation_time(self._container)
 
-        print(f"Opening {video_path} to read video frames.")
+        print(f"Opening {video_path} to read {self._stream.frames} video frames.")
 
 
     def read(self):
