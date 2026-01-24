@@ -1,11 +1,15 @@
 # Geo-tagging video frames
 
-## 1. Extracting the frames
+This repository contains code to extract geo-tagged frames from a video file and a GPX track, then create a 3D dot cloud from that.
 
-Using ffmpeg we can extract the frames at even intervals.  For example, 2 per second.  We probably need to calculate the average speed to understand the required fps later.
 
-The frames probably also might need resizing, 4k might be too big.
+## Extracting the frames
 
+Use the provided app:
+
+``` sh
+mkdir -p dst
+python3 -m app src/recording.mp4 src/recording.gpx dst
 ```
-ffmpeg -i recording.mp4 -vf "fps=1,scale=1920:-1" "frames/frame_%06d.jpg"
-```
+
+This will create a bunch of files in the `dst` folder, named like `dst/frame_000674.jpg`.
