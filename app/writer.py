@@ -7,9 +7,10 @@ import piexif
 from fractions import Fraction
 
 class Writer:
-    def __init__(self, distance = 1.0):
+    def __init__(self, folder, distance = 1.0):
         self._last = (None, None)
         self._distance = distance
+        self._folder = folder
         self._index = 1
 
     def write_frame(self, index, frame, frame_time, lat, lon):
@@ -106,6 +107,6 @@ class Writer:
         return (to_rational(deg), to_rational(min), to_rational(sec)), loc_value.encode("utf-8")
 
     def _get_filename(self):
-        filename = f"dst/frame_{self._index:06d}.jpg"
+        filename = f"{self._folder}/frame_{self._index:06d}.jpg"
         self._index += 1
         return filename
