@@ -36,5 +36,14 @@ docker run -ti --rm \
   -v "$(pwd)/my_project:/project:z" \
   docker.io/opendronemap/odm \
   --skip-orthophoto --skip-report \
+  --split 200 \
+  --split-overlap 50 \
+  --feature-quality high \
+  --mesh-size 200000 \
   --project-path /project .
 ```
+
+
+## Performance
+
+On a laptop with the Ryzen 5 5500U CPU and 32 GB of RAM, processing a set of 694 4K images took more than 20 hours.
