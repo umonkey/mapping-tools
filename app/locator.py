@@ -1,6 +1,6 @@
 """
-This file contains the code that gets exact GPS coordinates
-from a GPX track by a timestamp.
+This service gets exact GPS coordinates from a GPX track by a timestamp.
+Uses interpolation to accurately tag frames between GPS data points.
 """
 
 import gpxpy

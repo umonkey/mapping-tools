@@ -2,6 +2,11 @@
 
 This repository contains code to extract geo-tagged frames from a video file and a GPX track, then create a 3D dot cloud from that.
 
+Requirements:
+
+- The video file has accurate creation_time set.
+- The GPS track has data for the whole video.
+
 
 ## Extracting the frames
 
