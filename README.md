@@ -14,7 +14,7 @@ Use the provided app:
 
 ``` sh
 mkdir -p dst
-python3 -m app src/recording.mp4 src/recording.gpx dst
+uv run python3 -m app src/recording.mp4 src/recording.gpx dst
 ```
 
 This will create a bunch of files in the `dst` folder, named like `dst/frame_000674.jpg`.
