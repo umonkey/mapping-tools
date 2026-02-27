@@ -25,12 +25,14 @@ def main():
     reader = Reader(args.video_path, offset_seconds=args.offset)
     writer = Writer(distance=args.distance, folder=args.output_folder)
 
-    for index, frame, frame_time in reader.read():
+    for index, frame, frame_time, progress in reader.read():
         try:
             lat, lon = locator.locate(frame_time)
-            writer.write_frame(index, frame, frame_time, lat, lon)
+            writer.write_frame(index, frame, frame_time, lat, lon, progress)
         except NoCoordinates:
-            print(f"No coordinates for frame {index}")
+            # print(f"No coordinates for frame {index}")
+            pass
+    print("\nDone.")
 
 
 if __name__ == "__main__":

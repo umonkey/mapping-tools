@@ -16,12 +16,12 @@ class Writer:
         self._folder = folder
         self._index = 1
 
-    def write_frame(self, index, frame, frame_time, lat, lon):
+    def write_frame(self, index, frame, frame_time, lat, lon, progress):
         if self._should_write(lat, lon):
             self._last = (lat, lon)
-            self._write(index, frame, frame_time, lat, lon)
+            self._write(index, frame, frame_time, lat, lon, progress)
 
-    def _write(self, index, frame, timestamp, lat, lon):
+    def _write(self, index, frame, timestamp, lat, lon, progress):
         img = frame.to_image()
 
         lat_deg, lat_ref = self._loc_to_deg(lat, ["S", "N"])
@@ -59,7 +59,7 @@ class Writer:
         exif_bytes = piexif.dump(exif_dict)
         img.save(filename, "JPEG", exif=exif_bytes, quality=95)
 
-        print(f"Writing frame {index} as {filename} @ {lat},{lon}")
+        print(f"Writing frame {index} ({progress:.0f}%) as {filename} @ {lat},{lon}")
 
     def _get_thumbnail(self, img):
         thumb_io = io.BytesIO()
