@@ -4,6 +4,7 @@ Contains the code that writes frames to files.
 
 import math
 import piexif
+import io
 from fractions import Fraction
 
 class Writer:
@@ -40,7 +41,9 @@ class Writer:
                 piexif.GPSIFD.GPSLongitudeRef: lon_ref,
                 piexif.GPSIFD.GPSLongitude: lon_deg,
                 piexif.GPSIFD.GPSVersionID: (2, 2, 0, 0), # Standard version
-            }
+            },
+            "1st": {},
+            "thumbnail": self._get_thumbnail(img),
         }
 
         filename = self._get_filename()
@@ -49,6 +52,13 @@ class Writer:
         img.save(filename, "JPEG", exif=exif_bytes, quality=95)
 
         print(f"Writing frame {index} as {filename} @ {lat},{lon}")
+
+    def _get_thumbnail(self, img):
+        thumb_io = io.BytesIO()
+        thumbnail = img.copy()
+        thumbnail.thumbnail((256, 256))
+        thumbnail.save(thumb_io, format="JPEG")
+        return thumb_io.getvalue()
 
     def _should_write(self, lat, lon):
         if self._last[0] is None:
