@@ -1,5 +1,5 @@
-from .reader import Reader
 from .locator import Locator
+from .reader import Reader
 from .writer import Writer
 
 __all__ = [

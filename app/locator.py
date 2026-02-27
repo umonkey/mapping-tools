@@ -5,8 +5,10 @@ Uses interpolation to accurately tag frames between GPS data points.
 
 import gpxpy
 
+
 class NoCoordinates(Exception):
     pass
+
 
 class Locator:
     def __init__(self, gpx_path):
@@ -40,12 +42,14 @@ class Locator:
                     if point.time is None:
                         continue
 
-                    points.append((
-                        point.time,
-                        point.latitude,
-                        point.longitude,
-                        point.elevation,
-                    ))
+                    points.append(
+                        (
+                            point.time,
+                            point.latitude,
+                            point.longitude,
+                            point.elevation,
+                        )
+                    )
 
         points.sort()
 

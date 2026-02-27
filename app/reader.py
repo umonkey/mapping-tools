@@ -2,8 +2,10 @@
 This class implements a video frame reader.
 """
 
-import av
 from datetime import datetime, timedelta
+
+import av
+
 
 class Reader:
     def __init__(self, video_path, offset_seconds=0.0):
@@ -13,7 +15,6 @@ class Reader:
         self._offset_seconds = timedelta(seconds=offset_seconds)
 
         print(f"Opening {video_path} to read {self._stream.frames} video frames.")
-
 
     def read(self):
         for index, frame in enumerate(self._container.decode(self._stream)):
@@ -29,5 +30,5 @@ class Reader:
         if creation_time is None:
             raise RuntimeError("creation_time missing in the video")
 
-        creation_time = creation_time.replace('Z', '+00:00')
+        creation_time = creation_time.replace("Z", "+00:00")
         return datetime.fromisoformat(creation_time)

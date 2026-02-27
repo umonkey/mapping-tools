@@ -2,13 +2,15 @@
 Contains the code that writes frames to files.
 """
 
-import math
-import piexif
 import io
+import math
 from fractions import Fraction
 
+import piexif
+
+
 class Writer:
-    def __init__(self, folder, distance = 1.0):
+    def __init__(self, folder, distance=1.0):
         self._last = (None, None)
         self._distance = distance
         self._folder = folder
@@ -29,18 +31,24 @@ class Writer:
             "0th": {
                 # Optional: Add software name or camera model here if you want
                 piexif.ImageIFD.Make: b"Python Extractor",
-                piexif.ImageIFD.DateTime: timestamp.strftime("%Y:%m:%d %H:%M:%S").encode('utf-8')
+                piexif.ImageIFD.DateTime: timestamp.strftime(
+                    "%Y:%m:%d %H:%M:%S"
+                ).encode("utf-8"),
             },
             "Exif": {
-                piexif.ExifIFD.DateTimeOriginal: timestamp.strftime("%Y:%m:%d %H:%M:%S").encode('utf-8'),
-                piexif.ExifIFD.DateTimeDigitized: timestamp.strftime("%Y:%m:%d %H:%M:%S").encode('utf-8'),
+                piexif.ExifIFD.DateTimeOriginal: timestamp.strftime(
+                    "%Y:%m:%d %H:%M:%S"
+                ).encode("utf-8"),
+                piexif.ExifIFD.DateTimeDigitized: timestamp.strftime(
+                    "%Y:%m:%d %H:%M:%S"
+                ).encode("utf-8"),
             },
             "GPS": {
                 piexif.GPSIFD.GPSLatitudeRef: lat_ref,
                 piexif.GPSIFD.GPSLatitude: lat_deg,
                 piexif.GPSIFD.GPSLongitudeRef: lon_ref,
                 piexif.GPSIFD.GPSLongitude: lon_deg,
-                piexif.GPSIFD.GPSVersionID: (2, 2, 0, 0), # Standard version
+                piexif.GPSIFD.GPSVersionID: (2, 2, 0, 0),  # Standard version
             },
             "1st": {},
             "thumbnail": self._get_thumbnail(img),
@@ -82,9 +90,10 @@ class Writer:
         dlambda = math.radians(lon2 - lon1)
 
         # Haversine formula
-        a = math.sin(dphi / 2) ** 2 + \
-            math.cos(phi1) * math.cos(phi2) * \
-            math.sin(dlambda / 2) ** 2
+        a = (
+            math.sin(dphi / 2) ** 2
+            + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+        )
 
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
@@ -92,19 +101,20 @@ class Writer:
 
     def _loc_to_deg(self, value, loc):
         """
-        Converts decimal coordinates to EXIF-ready (degrees, minutes, seconds) rational tuples.
+        Converts decimal coordinates to EXIF-ready (degrees, minutes, seconds)
+        rational tuples.
         loc: ["lat" or "lon"] used to determine the Reference (N/S or E/W).
         """
         if value < 0:
-            loc_value = loc[0] # "S" or "W"
+            loc_value = loc[0]  # "S" or "W"
         else:
-            loc_value = loc[1] # "N" or "E"
+            loc_value = loc[1]  # "N" or "E"
 
         abs_value = abs(value)
         deg = int(abs_value)
         t1 = (abs_value - deg) * 60
         min = int(t1)
-        sec = round((t1 - min) * 60, 4) # Round to 4 decimals for reasonable precision
+        sec = round((t1 - min) * 60, 4)  # Round to 4 decimals for reasonable precision
 
         # Convert to rational tuples (numerator, denominator) for piexif
         # (35, 1) means 35 degrees
@@ -114,7 +124,9 @@ class Writer:
             f = Fraction(str(number)).limit_denominator(1000000)
             return (f.numerator, f.denominator)
 
-        return (to_rational(deg), to_rational(min), to_rational(sec)), loc_value.encode("utf-8")
+        return (to_rational(deg), to_rational(min), to_rational(sec)), loc_value.encode(
+            "utf-8"
+        )
 
     def _get_filename(self):
         filename = f"{self._folder}/frame_{self._index:06d}.jpg"
