@@ -1,16 +1,20 @@
-# Geo-tagging video frames
+# Mapping tools
 
-This repository contains code to extract geo-tagged frames from a video file and a GPX track, then create a 3D dot cloud from that.
+This repository contains some work-in-progress code that helps mapping trees.  This code is being developed for the [tree mapping](https://github.com/umonkey/treemap/) application and will eventually be moved there.
+
+
+## Existing code
+
+### Video Geotagging
+
+The application in `app` is designed to extract frames from video files and a corresponding GPX track, extract and geo-tag frames at certain distance.
 
 Requirements:
 
 - The video file has accurate creation_time set.
 - The GPS track has data for the whole video.
 
-
-## Extracting the frames
-
-Use the provided app:
+To extract the frames, run the app as following:
 
 ``` sh
 mkdir -p dst
@@ -20,7 +24,9 @@ uv run python3 -m app src/stretched.mp4 src/track.gpx dst --distance 3.0
 This will create a bunch of files in the `dst` folder, named like `dst/frame_000674.jpg`.
 
 
-## Create the dot cloud
+### Creating the dot cloud
+
+The idea is to feed geo-tagged images from the previous step to the OpenDroneMap application to create a dot cloud for extracting trees.  This is not yet working, as with all recent experiments ODM failed to produce anything after hours of processing the data.
 
 After the previous step finishes, you get a bunch of JPEG files in the `dst` folder:
 
@@ -47,8 +53,5 @@ docker run -ti --rm \
   --mesh-size 200000 \
   --project-path /project .
 ```
-
-
-## Performance
 
 On a laptop with the Ryzen 5 5500U CPU and 32 GB of RAM, processing a set of 694 4K images took more than 20 hours.
