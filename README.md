@@ -21,7 +21,14 @@ mkdir -p dst
 uv run python3 -m app src/stretched.mp4 src/track.gpx dst --distance 3.0
 ```
 
-This will create a bunch of files in the `dst` folder, named like `dst/frame_000674.jpg`.
+This will create a bunch of files in the `dst` folder, named like `dst/frame_000674.jpg`.  The output files contain GPS coordinates and thumbnails.  The remaining workflow is normally the following:
+
+1. Use [Photini](https://photini.readthedocs.io/en/latest/) to review how the images are aligned on the map, delete images that aren't needed (e.g. waiting for the green light), and move the images on the map to compensate for GPS errors.
+2. Upload the imagery to Mapillary using a command like this:
+
+   ``` bash
+
+   ```
 
 
 ### Creating the dot cloud
