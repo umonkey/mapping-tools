@@ -6,10 +6,11 @@ import av
 from datetime import datetime, timedelta
 
 class Reader:
-    def __init__(self, video_path):
+    def __init__(self, video_path, offset_seconds=0.0):
         self._container = av.open(video_path)
         self._stream = self._container.streams.video[0]
         self._creation_time = self._get_creation_time(self._container)
+        self._offset_seconds = timedelta(seconds=offset_seconds)
 
         print(f"Opening {video_path} to read {self._stream.frames} video frames.")
 
@@ -18,7 +19,7 @@ class Reader:
         for index, frame in enumerate(self._container.decode(self._stream)):
             frame_time_sec = frame.pts * self._stream.time_base
             time_offset = timedelta(seconds=float(frame_time_sec))
-            current_real_time = self._creation_time + time_offset
+            current_real_time = self._creation_time + time_offset + self._offset_seconds
 
             yield index, frame, current_real_time
 

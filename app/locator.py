@@ -5,6 +5,9 @@ Uses interpolation to accurately tag frames between GPS data points.
 
 import gpxpy
 
+class NoCoordinates(Exception):
+    pass
+
 class Locator:
     def __init__(self, gpx_path):
         self._points = self._load_points(gpx_path)
@@ -18,7 +21,8 @@ class Locator:
         prev, next = self._find_points(time)
 
         if prev is None or next is None:
-            return None, None  # Could not locate anything.
+            print(f"No coordinates for {time}")
+            raise NoCoordinates()
 
         lat, lon = self._interpolate(time, prev, next)
 
