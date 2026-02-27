@@ -1,5 +1,7 @@
 import argparse
 
+from tqdm import tqdm
+
 from . import Locator, Reader, Writer
 from .locator import NoCoordinates
 
@@ -25,14 +27,15 @@ def main():
     reader = Reader(args.video_path, offset_seconds=args.offset)
     writer = Writer(distance=args.distance, folder=args.output_folder)
 
-    for index, frame, frame_time, progress in reader.read():
+    for index, frame, frame_time, progress in tqdm(
+        reader.read(), total=reader.total_frames, desc="Processing frames"
+    ):
         try:
             lat, lon = locator.locate(frame_time)
-            writer.write_frame(index, frame, frame_time, lat, lon, progress)
+            writer.write_frame(index, frame, frame_time, lat, lon)
         except NoCoordinates:
             # print(f"No coordinates for frame {index}")
             pass
-    print("\nDone.")
 
 
 if __name__ == "__main__":
