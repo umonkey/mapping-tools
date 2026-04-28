@@ -6,8 +6,8 @@ import io
 import math
 from fractions import Fraction
 
-import piexif
-from tqdm import tqdm
+import piexif  # type: ignore
+from tqdm import tqdm  # type: ignore
 
 
 class Writer:

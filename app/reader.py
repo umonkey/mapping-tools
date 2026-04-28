@@ -7,6 +7,9 @@ from datetime import datetime, timedelta
 import av
 
 
+from .exceptions import CreationTimeMissing
+
+
 class Reader:
     def __init__(self, video_path, offset_seconds=0.0, timestamp=None):
         self._container = av.open(video_path)
@@ -59,9 +62,7 @@ class Reader:
         creation_time = container.metadata.get("creation_time")
 
         if creation_time is None:
-            raise RuntimeError(
-                "creation_time missing in the video. Use --timestamp to specify it manually."
-            )
+            raise CreationTimeMissing()
 
         return self._parse_timestamp(creation_time)
 

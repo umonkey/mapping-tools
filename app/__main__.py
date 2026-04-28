@@ -1,8 +1,11 @@
 import argparse
 
-from tqdm import tqdm
+import sys
+
+from tqdm import tqdm  # type: ignore
 
 from . import Locator, Reader, Writer
+from .exceptions import UsageException
 from .locator import NoCoordinates
 
 
@@ -28,21 +31,25 @@ def main():
 
     args = parser.parse_args()
 
-    locator = Locator(args.gpx_path)
-    reader = Reader(
-        args.video_path, offset_seconds=args.offset, timestamp=args.timestamp
-    )
-    writer = Writer(distance=args.distance, folder=args.output_folder)
+    try:
+        locator = Locator(args.gpx_path)
+        reader = Reader(
+            args.video_path, offset_seconds=args.offset, timestamp=args.timestamp
+        )
+        writer = Writer(distance=args.distance, folder=args.output_folder)
 
-    for index, frame, frame_time, progress in tqdm(
-        reader.read(), total=reader.total_frames, desc="Processing frames"
-    ):
-        try:
-            lat, lon = locator.locate(frame_time)
-            writer.write_frame(index, frame, frame_time, lat, lon)
-        except NoCoordinates:
-            # print(f"No coordinates for frame {index}")
-            pass
+        for index, frame, frame_time, progress in tqdm(
+            reader.read(), total=reader.total_frames, desc="Processing frames"
+        ):
+            try:
+                lat, lon = locator.locate(frame_time)
+                writer.write_frame(index, frame, frame_time, lat, lon)
+            except NoCoordinates:
+                # print(f"No coordinates for frame {index}")
+                pass
+    except UsageException as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
