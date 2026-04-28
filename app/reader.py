@@ -8,10 +8,13 @@ import av
 
 
 class Reader:
-    def __init__(self, video_path, offset_seconds=0.0):
+    def __init__(self, video_path, offset_seconds=0.0, timestamp=None):
         self._container = av.open(video_path)
         self._stream = self._container.streams.video[0]
-        self._creation_time = self._get_creation_time(self._container)
+        if timestamp:
+            self._creation_time = self._parse_timestamp(timestamp)
+        else:
+            self._creation_time = self._get_creation_time(self._container)
         self._offset_seconds = timedelta(seconds=offset_seconds)
 
         self.total_frames = self._get_total_frames()
@@ -56,7 +59,12 @@ class Reader:
         creation_time = container.metadata.get("creation_time")
 
         if creation_time is None:
-            raise RuntimeError("creation_time missing in the video")
+            raise RuntimeError(
+                "creation_time missing in the video. Use --timestamp to specify it manually."
+            )
 
-        creation_time = creation_time.replace("Z", "+00:00")
-        return datetime.fromisoformat(creation_time)
+        return self._parse_timestamp(creation_time)
+
+    def _parse_timestamp(self, timestamp_str):
+        timestamp_str = timestamp_str.replace("Z", "+00:00")
+        return datetime.fromisoformat(timestamp_str)

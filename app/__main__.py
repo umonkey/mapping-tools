@@ -20,11 +20,18 @@ def main():
         default=3.0,
         help="Minimum distance between frames in meters",
     )
+    parser.add_argument(
+        "--timestamp",
+        type=str,
+        help="Manually specify the video creation date (e.g., 2026-04-27T12:44:15Z)",
+    )
 
     args = parser.parse_args()
 
     locator = Locator(args.gpx_path)
-    reader = Reader(args.video_path, offset_seconds=args.offset)
+    reader = Reader(
+        args.video_path, offset_seconds=args.offset, timestamp=args.timestamp
+    )
     writer = Writer(distance=args.distance, folder=args.output_folder)
 
     for index, frame, frame_time, progress in tqdm(
