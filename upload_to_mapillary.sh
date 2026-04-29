@@ -3,7 +3,7 @@
 # uv run python3 -m app src/stretched.mp4 src/track.gpx dst --distance 10.0
 
 export MAPILLARY_TOOLS_MAX_SEQUENCE_PIXELS=100000000000
-export MAPILLARY_TOOLS_MAX_SEQUENCE_COUNT=99999
+export MAPILLARY_TOOLS_MAX_SEQUENCE_LENGTH=10000
 
 if [ ! -d dst ]; then
     echo "This script uploads JPEG files from ./dst to Mapillary."
@@ -12,6 +12,7 @@ if [ ! -d dst ]; then
 fi
 
 mapillary_tools process_and_upload ./dst \
+  --organization_key "3351990278289209" \
   --cutoff_distance 999999 \
   --cutoff_time 999999 \
   --duplicate_distance 0
