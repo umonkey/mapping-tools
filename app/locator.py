@@ -14,10 +14,32 @@ class NoCoordinates(Exception):
 
 
 class Locator:
-    def __init__(self, gpx_path):
-        self._points = self._load_points(gpx_path)
+    def __init__(self, gpx_path, hz=10):
+        points = self._load_points(gpx_path)
+        print(f"Found {len(points)} points in {gpx_path}")
 
-        print(f"Found {len(self._points)} points in {gpx_path}")
+        self._points = self.upsample(points, hz)
+        print(f"Upsampled to {len(self._points)} points at {hz} Hz")
+
+    def upsample(self, points, hz):
+        if not points or hz <= 0:
+            return points
+
+        interval = 1.0 / hz
+        upsampled = []
+        for i in range(len(points) - 1):
+            p1 = points[i]
+            p2 = points[i + 1]
+            upsampled.append(p1)
+
+            curr_t = p1[0] + datetime.timedelta(seconds=interval)
+            while (p2[0] - curr_t).total_seconds() > 0.001:
+                lat, lon = self._interpolate(curr_t, p1, p2)
+                upsampled.append((curr_t, lat, lon))
+                curr_t += datetime.timedelta(seconds=interval)
+
+        upsampled.append(points[-1])
+        return upsampled
 
     def find_closest(
         self, lat, lon, timestamp_hint=None, search_range=20
@@ -60,7 +82,7 @@ class Locator:
         candidates = []
         current_group = []
 
-        for p_time, p_lat, p_lon, _ in self._points:
+        for p_time, p_lat, p_lon in self._points:
             distance = gpxpy.geo.haversine_distance(lat, lon, p_lat, p_lon)
             if distance <= search_range:
                 current_group.append((p_time, distance))
@@ -105,7 +127,6 @@ class Locator:
                             point.time,
                             point.latitude,
                             point.longitude,
-                            point.elevation,
                         )
                     )
 
@@ -126,8 +147,8 @@ class Locator:
         return None, None
 
     def _interpolate(self, frame_time, prev, next):
-        t1, lat1, lon1, _ = prev
-        t2, lat2, lon2, _ = next
+        t1, lat1, lon1 = prev
+        t2, lat2, lon2 = next
 
         time_delta = (t2 - t1).total_seconds()
 
