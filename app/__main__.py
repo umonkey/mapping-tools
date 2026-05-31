@@ -1,6 +1,7 @@
 import argparse
-
+import subprocess
 import sys
+from datetime import timedelta
 
 from tqdm import tqdm  # type: ignore
 
@@ -32,8 +33,69 @@ def handle_extract(args):
 
 
 def handle_synchronize(args):
-    print(f"Synchronizing {args.video_path} with {args.gpx_path}...")
-    print("Dummy message: Synchronization logic not implemented yet.")
+    try:
+        locator = Locator(args.gpx_path)
+        reader = Reader(args.video_path, timestamp=args.timestamp)
+
+        # Calculate estimated time of the frame
+        fps = float(reader._stream.average_rate)
+        frame_offset = timedelta(seconds=args.frame / fps)
+
+        estimated_time = None
+        if reader._creation_time:
+            estimated_time = reader._creation_time + frame_offset
+            print(f"Video start time: {reader._creation_time.isoformat()}")
+            print(f"Frame {args.frame} offset: {frame_offset}")
+            print(f"Estimated frame time: {estimated_time.isoformat()}")
+        else:
+            print("Video creation_time missing. Searching across the whole track.")
+            print(f"Frame {args.frame} offset: {frame_offset}")
+
+        # Find the actual GPX timestamp for those coordinates
+        gpx_timestamp, distance = locator.find_closest_timestamp(
+            args.lat, args.lon, center_time=estimated_time, window_seconds=args.window
+        )
+
+        print(f"Found closest GPX point at: {gpx_timestamp.isoformat()} (distance: {distance:.2f}m)")
+
+        # Calculate new creation time
+        new_creation_time = gpx_timestamp - frame_offset
+        print(f"New video creation_time should be: {new_creation_time.isoformat()}")
+
+        # Update metadata using ffmpeg
+        output_path = args.video_path.rsplit(".", 1)
+        output_path = f"{output_path[0]}.synced.{output_path[1]}"
+
+        # Format timestamp for FFmpeg (ISO 8601)
+        ffmpeg_timestamp = new_creation_time.isoformat().replace("+00:00", "Z")
+
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i",
+            args.video_path,
+            "-c",
+            "copy",
+            "-map_metadata",
+            "0",
+            "-metadata",
+            f"creation_time={ffmpeg_timestamp}",
+            output_path,
+        ]
+
+        print(f"Running: {' '.join(cmd)}")
+        subprocess.run(cmd, check=True)
+        print(f"Successfully created synchronized video: {output_path}")
+
+    except NoCoordinates as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except UsageException as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except subprocess.CalledProcessError as e:
+        print(f"Error running ffmpeg: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def main():
@@ -63,10 +125,33 @@ def main():
     extract_parser.set_defaults(func=handle_extract)
 
     sync_parser = subparsers.add_parser(
-        "synchronize", help="Synchronize video with GPX (dummy)"
+        "synchronize", help="Synchronize video with GPX"
     )
     sync_parser.add_argument("video_path", help="Path to the video file")
     sync_parser.add_argument("gpx_path", help="Path to the GPX file")
+    sync_parser.add_argument(
+        "--frame",
+        type=int,
+        required=True,
+        help="The 0-indexed frame number from the video (e.g. from mpv)",
+    )
+    sync_parser.add_argument(
+        "--lat", type=float, required=True, help="Latitude of the frame"
+    )
+    sync_parser.add_argument(
+        "--lon", type=float, required=True, help="Longitude of the frame"
+    )
+    sync_parser.add_argument(
+        "--timestamp",
+        type=str,
+        help="Manually specify the current video creation date if missing",
+    )
+    sync_parser.add_argument(
+        "--window",
+        type=int,
+        default=60,
+        help="Search window in seconds around estimated time (default: 60)",
+    )
     sync_parser.set_defaults(func=handle_synchronize)
 
     args = parser.parse_args()

@@ -3,7 +3,10 @@ This service gets exact GPS coordinates from a GPX track by a timestamp.
 Uses interpolation to accurately tag frames between GPS data points.
 """
 
+import datetime
+
 import gpxpy
+import gpxpy.geo
 
 
 class NoCoordinates(Exception):
@@ -15,6 +18,42 @@ class Locator:
         self._points = self._load_points(gpx_path)
 
         print(f"Found {len(self._points)} points in {gpx_path}")
+
+    def find_closest_timestamp(
+        self, lat, lon, center_time=None, window_seconds=60
+    ) -> tuple[datetime.datetime, float]:
+        """
+        Find the timestamp and distance of the point closest to the given coordinates.
+        If center_time is provided, only search within center_time +/- window_seconds.
+        """
+        best_point = None
+        min_distance = float("inf")
+
+        if center_time:
+            start_time = center_time - datetime.timedelta(seconds=window_seconds)
+            end_time = center_time + datetime.timedelta(seconds=window_seconds)
+        else:
+            start_time = None
+            end_time = None
+
+        for p_time, p_lat, p_lon, _ in self._points:
+            if start_time and p_time < start_time:
+                continue
+            if end_time and p_time > end_time:
+                continue
+
+            distance = gpxpy.geo.haversine_distance(lat, lon, p_lat, p_lon)
+            if distance < min_distance:
+                min_distance = distance
+                best_point = p_time
+
+        if best_point is None:
+            if center_time:
+                raise NoCoordinates("No GPX points found in the specified window.")
+            else:
+                raise NoCoordinates("No GPX points found in the GPX file.")
+
+        return best_point, min_distance
 
     def locate(self, time):
         """

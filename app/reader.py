@@ -17,7 +17,10 @@ class Reader:
         if timestamp:
             self._creation_time = self._parse_timestamp(timestamp)
         else:
-            self._creation_time = self._get_creation_time(self._container)
+            try:
+                self._creation_time = self._get_creation_time(self._container)
+            except CreationTimeMissing:
+                self._creation_time = None
         self._offset_seconds = timedelta(seconds=offset_seconds)
 
         self.total_frames = self._get_total_frames()
@@ -42,6 +45,9 @@ class Reader:
         return 0
 
     def read(self):
+        if self._creation_time is None:
+            raise CreationTimeMissing()
+
         for index, frame in enumerate(self._container.decode(self._stream)):
             frame_time_sec = frame.pts * self._stream.time_base
             time_offset = timedelta(seconds=float(frame_time_sec))
