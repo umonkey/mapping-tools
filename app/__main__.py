@@ -52,11 +52,16 @@ def handle_synchronize(args):
             print(f"Frame {args.frame} offset: {frame_offset}")
 
         # Find the actual GPX timestamp for those coordinates
-        gpx_timestamp, distance = locator.find_closest_timestamp(
-            args.lat, args.lon, center_time=estimated_time, window_seconds=args.window
+        gpx_timestamp, distance = locator.find_closest(
+            args.lat,
+            args.lon,
+            timestamp_hint=estimated_time,
+            search_range=args.range,
         )
 
-        print(f"Found closest GPX point at: {gpx_timestamp.isoformat()} (distance: {distance:.2f}m)")
+        print(
+            f"Found closest GPX point at: {gpx_timestamp.isoformat()} (distance: {distance:.2f}m)"
+        )
 
         # Calculate new creation time
         new_creation_time = gpx_timestamp - frame_offset
@@ -147,10 +152,10 @@ def main():
         help="Manually specify the current video creation date if missing",
     )
     sync_parser.add_argument(
-        "--window",
+        "--range",
         type=int,
-        default=60,
-        help="Search window in seconds around estimated time (default: 60)",
+        default=20,
+        help="Search range in meters (default: 20)",
     )
     sync_parser.set_defaults(func=handle_synchronize)
 

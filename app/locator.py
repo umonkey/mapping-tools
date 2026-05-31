@@ -19,41 +19,60 @@ class Locator:
 
         print(f"Found {len(self._points)} points in {gpx_path}")
 
-    def find_closest_timestamp(
-        self, lat, lon, center_time=None, window_seconds=60
+    def find_closest(
+        self, lat, lon, timestamp_hint=None, search_range=20
     ) -> tuple[datetime.datetime, float]:
         """
-        Find the timestamp and distance of the point closest to the given coordinates.
-        If center_time is provided, only search within center_time +/- window_seconds.
+        Find the closest points within the search_range.
+        If there are multiple intersections, use timestamp_hint to choose one.
         """
-        best_point = None
-        min_distance = float("inf")
+        candidates = self._find_closest_groups(lat, lon, search_range)
 
-        if center_time:
-            start_time = center_time - datetime.timedelta(seconds=window_seconds)
-            end_time = center_time + datetime.timedelta(seconds=window_seconds)
-        else:
-            start_time = None
-            end_time = None
+        if not candidates:
+            raise NoCoordinates(f"No points found within {search_range}m of {lat}, {lon}")
+
+        if timestamp_hint:
+            return min(
+                candidates, key=lambda x: abs((x[0] - timestamp_hint).total_seconds())
+            )
+
+        if len(candidates) == 1:
+            return candidates[0]
+
+        print(f"Found {len(candidates)} possible intersections:")
+        for t, d in candidates:
+            print(f" - {t.isoformat()} (distance: {d:.2f}m)")
+
+        print(
+            f"\nPlease provide a timestamp hint using --timestamp to choose the correct one."
+        )
+
+        print(f"Example: --timestamp {candidates[0][0].isoformat()}")
+
+        raise NoCoordinates("Multiple intersections found. Please disambiguate.")
+
+    def _find_closest_groups(
+        self, lat, lon, search_range
+    ) -> list[tuple[datetime.datetime, float]]:
+        """
+        Find contiguous groups of points within search_range and return the closest point from each.
+        """
+        candidates = []
+        current_group = []
 
         for p_time, p_lat, p_lon, _ in self._points:
-            if start_time and p_time < start_time:
-                continue
-            if end_time and p_time > end_time:
-                continue
-
             distance = gpxpy.geo.haversine_distance(lat, lon, p_lat, p_lon)
-            if distance < min_distance:
-                min_distance = distance
-                best_point = p_time
-
-        if best_point is None:
-            if center_time:
-                raise NoCoordinates("No GPX points found in the specified window.")
+            if distance <= search_range:
+                current_group.append((p_time, distance))
             else:
-                raise NoCoordinates("No GPX points found in the GPX file.")
+                if current_group:
+                    candidates.append(min(current_group, key=lambda x: x[1]))
+                    current_group = []
 
-        return best_point, min_distance
+        if current_group:
+            candidates.append(min(current_group, key=lambda x: x[1]))
+
+        return candidates
 
     def locate(self, time):
         """
