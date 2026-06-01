@@ -1,5 +1,6 @@
 class UsageException(Exception):
     """Base class for exceptions that should not show a stack trace."""
+
     pass
 
 

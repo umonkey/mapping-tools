@@ -8,6 +8,15 @@ from tqdm import tqdm  # type: ignore
 from . import Locator, Reader, Writer
 from .exceptions import UsageException
 from .locator import NoCoordinates
+from .map_match import run_map_match
+
+
+def handle_match(args):
+    try:
+        run_map_match(args.input_dir, args.output_dir, valhalla_url=args.url)
+    except Exception as e:
+        print(f"Error during map matching: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def handle_extract(args):
@@ -158,6 +167,18 @@ def main():
         help="Search range in meters (default: 20)",
     )
     sync_parser.set_defaults(func=handle_synchronize)
+
+    match_parser = subparsers.add_parser(
+        "match", help="Map match geotagged images to road network"
+    )
+    match_parser.add_argument("input_dir", help="Directory with geotagged images")
+    match_parser.add_argument("output_dir", help="Directory to save matched images")
+    match_parser.add_argument(
+        "--url",
+        default="http://localhost:8002/trace_attributes",
+        help="Valhalla trace_attributes URL",
+    )
+    match_parser.set_defaults(func=handle_match)
 
     args = parser.parse_args()
     args.func(args)

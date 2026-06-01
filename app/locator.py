@@ -51,7 +51,9 @@ class Locator:
         candidates = self._find_closest_groups(lat, lon, search_range)
 
         if not candidates:
-            raise NoCoordinates(f"No points found within {search_range}m of {lat}, {lon}")
+            raise NoCoordinates(
+                f"No points found within {search_range}m of {lat}, {lon}"
+            )
 
         if timestamp_hint:
             return min(

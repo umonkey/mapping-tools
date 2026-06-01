@@ -1,0 +1,17 @@
+name: mapping
+
+services:
+  valhalla:
+    image: ghcr.io/gis-ops/docker-valhalla/valhalla:latest
+    ports:
+      - "8002:8002"
+    volumes:
+      - valhalla_data:/custom_files
+    environment:
+      - tile_urls=https://download.geofabrik.de/asia/armenia-latest.osm.pbf
+      - build_admins=True
+      - build_tiles=True
+      - force_rebuild=False
+
+volumes:
+  valhalla_data:

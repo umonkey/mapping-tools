@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 import av
 
-
 from .exceptions import CreationTimeMissing
 
 

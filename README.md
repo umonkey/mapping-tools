@@ -31,6 +31,27 @@ This will create a bunch of files in the `dst` folder, named like `dst/frame_000
    ```
 
 
+### Map Matching
+
+If the extracted frames have GPS errors or are not perfectly aligned with the road, you can use Valhalla to snap them to the road network.
+
+1. Start a local Valhalla instance using Docker:
+
+   ```bash
+   docker compose up -d
+   ```
+
+   (Note: The first run will download OSM data for Armenia and build routing tiles).
+
+2. Run the map matching command:
+
+   ```bash
+   uv run python3 -m app match projects/kievyan/dst projects/kievyan/matched
+   ```
+
+   This will create a new set of images in `projects/kievyan/matched` with corrected GPS coordinates and added bearing information (direction of travel).
+
+
 ### Creating the dot cloud
 
 The idea is to feed geo-tagged images from the previous step to the OpenDroneMap application to create a dot cloud for extracting trees.  This is not yet working, as with all recent experiments ODM failed to produce anything after hours of processing the data.
