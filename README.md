@@ -27,7 +27,13 @@ This will create a bunch of files in the `dst` folder, named like `dst/frame_000
 2. Upload the imagery to Mapillary using a command like this:
 
    ``` bash
-
+    export MAPILLARY_TOOLS_MAX_SEQUENCE_PIXELS=100000000000
+    export MAPILLARY_TOOLS_MAX_SEQUENCE_COUNT=99999
+    
+    mapillary_tools process_and_upload ./dst \
+      --cutoff_distance 999999 \
+      --cutoff_time 999999 \
+      --duplicate_distance 0
    ```
 
 
