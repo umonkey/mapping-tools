@@ -68,7 +68,8 @@ class Locator:
             print(f" - {t.isoformat()} (distance: {d:.2f}m)")
 
         print(
-            f"\nPlease provide a timestamp hint using --timestamp to choose the correct one."
+            "\nPlease provide a timestamp hint using --timestamp to choose "
+            "the correct one."
         )
 
         print(f"Example: --timestamp {candidates[0][0].isoformat()}")
@@ -79,7 +80,8 @@ class Locator:
         self, lat, lon, search_range
     ) -> list[tuple[datetime.datetime, float]]:
         """
-        Find contiguous groups of points within search_range and return the closest point from each.
+        Find contiguous groups of points within search_range and return the
+        closest point from each.
         """
         candidates = []
         current_group = []
@@ -110,7 +112,7 @@ class Locator:
 
         lat, lon = self._interpolate(time, prev, next)
 
-        return lat, lon
+        return lat, lon, time
 
     def _load_points(self, gpx_path):
         with open(gpx_path, "r") as gpx_file:

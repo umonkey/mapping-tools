@@ -2,6 +2,7 @@
 Contains the code that writes frames to files.
 """
 
+import datetime
 import io
 import math
 from fractions import Fraction
@@ -17,16 +18,25 @@ class Writer:
         self._folder = folder
         self._index = 1
 
-    def write_frame(self, index, frame, frame_time, lat, lon):
+    def write_frame(self, index, frame, frame_time, lat, lon, gps_time):
         if self._should_write(lat, lon):
             self._last = (lat, lon)
-            self._write(index, frame, frame_time, lat, lon)
+            self._write(index, frame, frame_time, lat, lon, gps_time)
 
-    def _write(self, index, frame, timestamp, lat, lon):
+    def _write(self, index, frame, timestamp, lat, lon, gps_time):
         img = frame.to_image()
 
         lat_deg, lat_ref = self._loc_to_deg(lat, ["S", "N"])
         lon_deg, lon_ref = self._loc_to_deg(lon, ["W", "E"])
+
+        # GPS time should be in UTC
+        gps_time_utc = gps_time.astimezone(datetime.timezone.utc)
+        gps_date_stamp = gps_time_utc.strftime("%Y:%m:%d")
+        gps_time_stamp = (
+            (gps_time_utc.hour, 1),
+            (gps_time_utc.minute, 1),
+            (int(gps_time_utc.second), 1),
+        )
 
         exif_dict = {
             "0th": {
@@ -50,6 +60,8 @@ class Writer:
                 piexif.GPSIFD.GPSLongitudeRef: lon_ref,
                 piexif.GPSIFD.GPSLongitude: lon_deg,
                 piexif.GPSIFD.GPSVersionID: (2, 2, 0, 0),  # Standard version
+                piexif.GPSIFD.GPSTimeStamp: gps_time_stamp,
+                piexif.GPSIFD.GPSDateStamp: gps_date_stamp.encode("utf-8"),
             },
             "1st": {},
             "thumbnail": self._get_thumbnail(img),

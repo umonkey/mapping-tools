@@ -31,8 +31,8 @@ def handle_extract(args):
             reader.read(), total=reader.total_frames, desc="Processing frames"
         ):
             try:
-                lat, lon = locator.locate(frame_time)
-                writer.write_frame(index, frame, frame_time, lat, lon)
+                lat, lon, gps_time = locator.locate(frame_time)
+                writer.write_frame(index, frame, frame_time, lat, lon, gps_time)
             except NoCoordinates:
                 # print(f"No coordinates for frame {index}")
                 pass
@@ -69,7 +69,8 @@ def handle_synchronize(args):
         )
 
         print(
-            f"Found closest GPX point at: {gpx_timestamp.isoformat()} (distance: {distance:.2f}m)"
+            f"Found closest GPX point at: {gpx_timestamp.isoformat()} "
+            f"(distance: {distance:.2f}m)"
         )
 
         # Calculate new creation time

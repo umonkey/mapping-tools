@@ -89,3 +89,26 @@ docker run -ti --rm \
 ```
 
 On a laptop with the Ryzen 5 5500U CPU and 32 GB of RAM, processing a set of 694 4K images took more than 20 hours.
+
+
+## Other processes
+
+### GPS Synchronization
+
+Phone GPS normally has a 2-3 second lag, so even if phone and camera timers are in perfect sync, you can still get a 30-50 meter offset while driving.  To fix this, you need to synchronize the video manually.  To do this, use `mpv` to find a part of the video where (a) the car is moving on its normal speed, not standing on a red light, and (b) it is in a location that can be accurately identified on the map, e.g. a crosswalk or a building corner.  Take the frame number, coordinates and pass them to this command:
+
+```
+uv run python3 -m app synchronize --frame 100500 --lat 40.0 --lon 50.0 src/video.mp4 src/track.gpx
+```
+
+To get the frame number, you might use `mpv`.  The 8K video will likely lag heavily, so you might need to transcode it to 720p:
+
+```
+ffmpeg -i src/video.mp4 -vf "scale=-1:720" -c:v libx264 -crf 30 -preset veryfast -an -b:a 128k src/video-720p.mp4
+```
+
+Then run `mpv` to play the video while showing the frame number and some guides for front, right and back margins:
+
+```
+mpv --hwdec=no --osd-msg1='Frame: ${estimated-frame-number} / ${estimated-frame-count}' --vf=lavfi='[drawgrid=w=iw/4:h=ih:x=iw*0.5:c=red:t=2]' src/video-720p.MP4
+```
