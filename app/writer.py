@@ -23,6 +23,10 @@ class Writer:
             self._last = (lat, lon)
             self._write(index, frame, frame_time, lat, lon, gps_time)
 
+    def _to_rational(self, number):
+        f = Fraction(str(number)).limit_denominator(1000000)
+        return (f.numerator, f.denominator)
+
     def _write(self, index, frame, timestamp, lat, lon, gps_time):
         img = frame.to_image()
 
@@ -32,10 +36,14 @@ class Writer:
         # GPS time should be in UTC
         gps_time_utc = gps_time.astimezone(datetime.timezone.utc)
         gps_date_stamp = gps_time_utc.strftime("%Y:%m:%d")
+
+        # Calculate fractional seconds
+        gps_seconds = gps_time_utc.second + gps_time_utc.microsecond / 1_000_000
+
         gps_time_stamp = (
             (gps_time_utc.hour, 1),
             (gps_time_utc.minute, 1),
-            (int(gps_time_utc.second), 1),
+            self._to_rational(gps_seconds),
         )
 
         exif_dict = {
@@ -53,6 +61,12 @@ class Writer:
                 piexif.ExifIFD.DateTimeDigitized: timestamp.strftime(
                     "%Y:%m:%d %H:%M:%S"
                 ).encode("utf-8"),
+                piexif.ExifIFD.SubSecTimeOriginal: f"{timestamp.microsecond // 10000:02d}".encode(
+                    "utf-8"
+                ),
+                piexif.ExifIFD.SubSecTimeDigitized: f"{timestamp.microsecond // 10000:02d}".encode(
+                    "utf-8"
+                ),
             },
             "GPS": {
                 piexif.GPSIFD.GPSLatitudeRef: lat_ref,
@@ -129,17 +143,11 @@ class Writer:
         min = int(t1)
         sec = round((t1 - min) * 60, 4)  # Round to 4 decimals for reasonable precision
 
-        # Convert to rational tuples (numerator, denominator) for piexif
-        # (35, 1) means 35 degrees
-        # (12, 1) means 12 minutes
-        # (345678, 10000) means 34.5678 seconds
-        def to_rational(number):
-            f = Fraction(str(number)).limit_denominator(1000000)
-            return (f.numerator, f.denominator)
-
-        return (to_rational(deg), to_rational(min), to_rational(sec)), loc_value.encode(
-            "utf-8"
-        )
+        return (
+            self._to_rational(deg),
+            self._to_rational(min),
+            self._to_rational(sec),
+        ), loc_value.encode("utf-8")
 
     def _get_filename(self):
         filename = f"{self._folder}/frame_{self._index:06d}.jpg"
